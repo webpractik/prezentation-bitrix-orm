@@ -1,0 +1,3010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Shower Presentation Engine</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="shower/themes/ribbon/styles/styles.css">
+    <style>
+		.shower {
+			--slide-ratio: calc(16 / 9);
+		}
+
+		.small-text {
+			font-size: 14px;
+		}
+
+		.listing-code pre code {
+			font-size: 12px;
+			line-height: 1em;
+		}
+
+		#off::after {
+			visibility: hidden;
+		}
+    </style>
+</head>
+<body class="shower list">
+
+<header class="caption">
+    <h1>Deep Bitrix ORM (Object-Relational Mapping)</h1>
+    <p>Глубокое погружение в ORM. От основ до решения нетиповых проблем и новинок</p>
+</header>
+
+<section class="slide" id="off">
+    <h2 class="place">О чем поговорим?</h2>
+</section>
+
+<section class="slide">
+    <h2>Что такое ORM</h2>
+    <p>
+        ORM &mdash; Object-Relational Mapping, что в переводе &laquo;объектно-реляционное отображение&raquo;.
+    </p>
+
+    <p>
+        Суть технологии заключается в описании таблицы для доступа к ней с помощью средств ООП
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Что такое Bitrix ORM</h2>
+
+    <p>
+        Имеет достаточно гибкий функционал для работы с сущностями, их генерацией налету, именованными методами, наличием обёрток и помощников для построения запросов
+    </p>
+    <p>
+        Также поставляется с большим количеством уже готовых сущностей модулей ядра
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Документация Bitrix ORM</h2>
+
+    <p class="note small-text">
+        <a href="https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=43&CHAPTER_ID=05748">https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=43&CHAPTER_ID=05748</a>
+    </p>
+
+    <p class="note small-text">
+        <a href="https://github.com/medveddev/bxorm">https://github.com/medveddev/bxorm</a>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>История развития</h2>
+    <p class="next">
+        С версии ядра <b>12.0.0</b> (2012-13 год) появился абстрактный базовый класс для работы с объектами данных <b>DataManager</b> (исходя из офф. документации по D7).
+    </p>
+    <p class="next">
+        С версии ядра <b>18.0.3</b> (2018-06-07) добавляются <b>объекты ORM</b>, в это же время меняется структура классов ORM (исходя из описания истории версий).
+    </p>
+    <p class="next">
+        С версии ядра <b>19.0.0</b> (2020 год) у модуля iblock добавлена поддержка <b>ORM при работе с элементами инфоблоков</b>.
+    </p>
+</section>
+
+<section class="slide">
+    <h2>История развития использования в Вебпрактик</h2>
+    <p class="next">
+        В <b>2012 году</b> использование данной технологии стало <b>маст-хэвом</b>.
+    </p>
+    <p class="next">
+        С конца <b>2019 года</b> уходим от массивов и описание таблиц вручную и применяем объекты.
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Понятие сущности</h2>
+
+    <p>
+        По определению Bitrix Сущность &mdash; это совокупность коллекции объектов с присущей им базовой (низкоуровневой) бизнес-логикой.
+    </p>
+
+    <p class="note">
+        Все сущности являются потомками класса
+        <br><em>\Bitrix\Main\ORM\Data\DataManager</em>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Понятие сущности</h2>
+
+    <p>
+        Например, сущность <em>Пользователь</em> &mdash; множество пользователей с присущим набором полей: ID, LOGIN, EMAIL, PASSWORD и т.д.
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Название сущности</h2>
+
+    <p>
+        В парадигме Bitrix под сущностью подразумевается <em>User</em>, но класс с её описанием должен иметь постфикс <em>Table</em>, то есть <em>UserTable</em>
+    </p>
+
+    <p>
+        Основные имена были зарезервированы
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Название сущности</h2>
+
+    <p>
+        Но сегодня в работе с ORM мы получим объект класса с префиксом <em>EO_</em>, то есть <em>EO_User</em>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Виды сущностей</h2>
+
+    <ul>
+        <li class="next">
+            Стандартная
+        </li>
+        <li class="next">
+            Динамическая
+            <ul>
+                <li class="next">
+                    Ручная компиляция
+                </li>
+                <li class="next">
+                    Автоматическая компиляция (на лету)
+                </li>
+            </ul>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Стандартная сущность</h2>
+
+    <p class="next">
+        Обращение через физически описанный класс
+    </p>
+
+    <p class="next">
+        Наследуется от <code>\Bitrix\Main\ORM\Data\DataManager</code> и обязательно определяет методы <em>getTableName</em> и <em>getMap</em>
+    </p>
+
+    <p class="next">
+        Первый возвращает название таблицы в БД. Второй &mdash; массив полей сущности
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Стандартная сущность. Highload-блоков</h2>
+
+    <p>
+        Наследуется от <code>\Bitrix\Highloadblock\DataManager</code> который расширяет <code>\Bitrix\Main\ORM\Data\DataManager</code>
+    </p>
+
+    <p>
+        Стоит определить метод <em>getHighloadBlock</em> который возвращает массив данных о highload-блоке
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Стандартная сущность. Highload-блоков</h2>
+
+    <p>
+        Вручную описывать сущности Highload-блоков нет необходимости, поскольку для них существует компиляция. Делать это нужно в случаях если:
+    </p>
+
+    <ul>
+        <li>
+            Нужна строгая типизация <br>
+            <p class="note small-text">
+                При генерации аннотаций модуля highloadblock создается описание только для таблиц модуля, а не для таблиц пользовательских highload-блоков
+            </p>
+        </li>
+        <li>
+            Нужно расширить поля сущности или описать новые связи, которые не строятся автоматически
+        </li>
+    </ul>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NmRiNTJ.png" alt="Пример описания стандартной сущности">
+</section>
+
+<section class="slide">
+    <h2>Поля сущности</h2>
+
+    <p>
+        Все поля являются потомками класса <code>\Bitrix\Main\ORM\Fields\Field</code>
+    </p>
+
+    <p>
+        На текущий момент их более двадцати
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Скалярные поля</h2>
+
+    <div class="small-text">
+        <p>
+            <code>abstract class
+                <mark>ScalarField</mark>
+                  extends Field implements IStorable, ITypeHintable</code>
+        </p>
+
+        <ul>
+            <li class="next">class
+                <mark>ArrayField</mark>
+                             extends ScalarField
+            </li>
+            <li class="next">class
+                <mark>BooleanField</mark>
+                             extends ScalarField
+            </li>
+            <li class="next">
+                class
+                <mark>DateField</mark>
+                extends ScalarField
+                <ul>
+                    <li class="next">class
+                        <mark>DatetimeField</mark>
+                                     extends DateField
+                    </li>
+                </ul>
+            </li>
+            <li class="next">class
+                <mark>EnumField</mark>
+                             extends ScalarField
+            </li>
+            <li class="next">class
+                <mark>FloatField</mark>
+                             extends ScalarField
+            </li>
+            <li class="next">class
+                <mark>IntegerField</mark>
+                             extends ScalarField
+            </li>
+            <li class="next">
+                class
+                <mark>StringField</mark>
+                extends ScalarField
+                <ul>
+                    <li class="next">
+                        class
+                        <mark>TextField</mark>
+                        extends StringField
+                        <ul>
+                            <li class="next">class
+                                <mark>CryptoField</mark>
+                                             extends TextField
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<section class="slide">
+    <h2>Поля связей</h2>
+
+    <div class="small-text">
+        <p>
+            <code>abstract class
+                <mark>Relation</mark>
+                  extends Field implements ITypeHintable</code>
+        </p>
+
+        <ul>
+            <li class="next">class
+                <mark>ManyToMany</mark>
+                             extends Relation
+            </li>
+            <li class="next">
+                class
+                <mark>OneToMany</mark>
+                extends Relation
+                <ul>
+                    <li class="next">class
+                        <mark>PropertyOneToMany</mark>
+                                     extends OneToMany
+                    </li>
+                </ul>
+            </li>
+            <li class="next">
+                class
+                <mark>Reference</mark>
+                extends Relation
+                <ul>
+                    <li class="next">class
+                        <mark>PropertyReference</mark>
+                                     extends Reference
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<section class="slide">
+    <h2>Другие поля</h2>
+
+    <div class="small-text">
+        <ul>
+            <li class="next">
+                class
+                <mark>ExpressionField</mark>
+                extends Field implements IReadable
+                <ul>
+                    <li class="next">
+                        class
+                        <mark>UserTypeField</mark>
+                        extends ExpressionField
+                    </li>
+                </ul>
+            </li>
+            <li class="next">
+                class
+                <mark>UField</mark>
+                extends Field
+            </li>
+        </ul>
+    </div>
+</section>
+
+<section class="slide">
+    <h2>Другие поля. ExpressionField</h2>
+
+    <p>
+        Важно знать о возможностях поля. Оно позволяет не хранить данные в таблице, а зарегистрировать виртуальное поле базирующиеся на SQL&nbsp;выражении
+    </p>
+
+    <pre class="small-text">
+        <code>new ExpressionField(</code>
+        <code>    'SRC_PREVIEW_URL',</code>
+        <code>    'CONCAT("/upload/", %s, \'/\', %s)',</code>
+        <code>    [</code>
+        <code>        'SRC_PREVIEW_FILE.SUBDIR',</code>
+        <code>        'SRC_PREVIEW_FILE.FILE_NAME',</code>
+        <code>    ]</code>
+        <code>)</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Динамическая (Ручная компиляция)</h2>
+
+    <p>
+        Это сущность описание которой выполняется непосредственно в момент вызова определенного метода
+    </p>
+
+    <p>
+        Есть ряд готовых методов, которые позволяют компилировать разные по специфике сущности
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Динамическая (Ручная компиляция). Элементы инфоблоков</h2>
+
+    <ul>
+        <li class="next">
+            IblockTable::compileEntity(string: API_CODE)
+        </li>
+        <li class="next">
+            Iblock::wakeUp(int: IBLOCK_ID)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Динамическая (Ручная компиляция). Разделы инфоблоков</h2>
+
+    <ul>
+        <li>
+            Section::compileEntityByIblock(int: IBLOCK_ID)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Динамическая (Ручная компиляция). Элементы Highload-блоков</h2>
+
+    <ul>
+        <li>
+            HighloadBlockTable::compileEntity(mixed: data)
+            <br>
+            <ul>
+                <li class="next">
+                    array: data
+                    <p class="note small-text">
+                        <code>
+                            $data = HighloadBlockTable::getById(int: id)->fetch()
+                            <br>
+                            $data = HighloadBlockTable::getList(array: parameters)->fetch()
+                        </code>
+                    </p>
+                </li>
+                <li class="next">
+                    int: id
+                </li>
+                <li class="next">
+                    string: name
+                </li>
+            </ul>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Динамическая (Автоматическая компиляция)</h2>
+
+    <p>
+        Сущность компилируемая на лету без предварительного вызова каких либо методов
+    </p>
+
+    <p>
+        Обращение через имя <em>Element{API_CODE}Table</em>
+    </p>
+
+    <p class="note small-text">
+        На данный момент возможно только для сущности элементов инфоблока &mdash; таблица <em>b_iblock_element</em>. Для работы необходим заполненный ApiCode инфоблока
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Перед началом работы. Аннотации</h2>
+
+    <p>
+        Физически большинства методов и таблиц нет, поэтому IDE не сможет вам построить подсказки
+    </p>
+
+    <p>
+        Для быстрой и удобной работы в IDE нужно сгенерировать аннотации
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Генерация аннотации</h2>
+
+    <ul>
+        <li class="next">
+            Установка зависимостей composer
+        </li>
+        <li class="next">
+            Генерация
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Генерация аннотации. Composer</h2>
+
+    <p>
+        Установка зависимостей composer
+    </p>
+
+    <pre><code>cd bitrix && COMPOSER=composer-bx.json composer install</code></pre>
+</section>
+
+<section class="slide">
+    <h2>Генерация аннотации. Composer</h2>
+
+    <p>
+        Можно подключить в свой <em>composer.json</em> помощью <em>merge-plugin</em>
+    </p>
+
+    <p class="note small-text">
+        Подробнее в документации <a href="https://github.com/medveddev/bxorm/blob/master/composer.md">https://github.com/medveddev/bxorm/blob/master/composer.md</a>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Генерация аннотации</h2>
+
+    <pre class="next small-text">
+        # Базовая команда (модуль main)<br>
+        php bitrix.php orm:annotate
+    </pre>
+
+    <pre class="next small-text">
+        # Чтение всех модулей <br>
+        php bitrix.php orm:annotate -m all
+    </pre>
+
+    <pre class="next small-text">
+        # Чтение нужных модулей <br>
+        php bitrix.php orm:annotate -m main,iblock,webpractik.main
+    </pre>
+
+    <pre class="next small-text">
+        # Дополнение аннотаций <br>
+        php bitrix.php orm:annotate -m catalog
+    </pre>
+
+    <pre class="next small-text">
+        # Перезапись аннотаций <br>
+        php bitrix.php orm:annotate -c -m catalog
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Генерация аннотации</h2>
+
+    <p>
+        С версии <em>v20.100.0</em> главного модуля аннотации основных сущностей включены в поставку
+    </p>
+
+    <p>
+        В будущем обещали добавить режим разработки, где они будут обновляться в реальном времени
+    </p>
+
+    <p class="note small-text">
+        Подробнее в документации <a href="https://github.com/medveddev/bxorm/blob/master/90_annotate.md">https://github.com/medveddev/bxorm/blob/master/90_annotate.md</a>
+    </p>
+</section>
+
+<!--todo-->
+<section class="slide">
+    <h2>Связи полей, почему стоит знать структуру таблиц</h2>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Основные методы сущности</h2>
+
+    <pre class="small-text next">
+        # Получение объекта запроса <br>
+        ElementTable::query();
+    </pre>
+
+    <pre class="small-text next">
+        # Создание объекта элемента таблицы <br>
+        ElementTable::createObject();
+    </pre>
+
+    <pre class="small-text next">
+        # Создание объекта коллекции элементов <br>
+        ElementTable::createCollection();
+    </pre>
+
+    <pre class="small-text next">
+        # Получение готовой сущности <br>
+        ElementTable::getEntity();
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Полезные методы сущности</h2>
+
+    <pre class="small-text next">
+        Получение массива полей сущности<br>
+        ElementTable::getMap();
+    </pre>
+    <pre class="small-text next">
+        Восстановление объекта<br>
+        ElementTable::wakeUpObject(mixed: $row);
+    </pre>
+    <pre class="small-text next">
+        Восстановление коллекции <br>
+        ElementTable::wakeUpCollection(mixed: $rows);
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Полезные методы сущности</h2>
+
+    <div class="next">
+        <pre class="small-text">
+        # Удаление элемента <br>
+        ElementTable::delete(mixed: $primary); <br>
+    </pre>
+
+        <p class="note small-text">
+            Если есть доступ к объекту элемента, то нужно вызвать его метод <code>$object->delete();</code>
+        </p>
+    </div>
+
+    <div class="next">
+        <pre class="small-text">
+            # Обновление элемента <br>
+            ElementTable::update(mixed: $primary, array: $data);
+        </pre>
+
+        <p class="note small-text">
+            Если есть доступ к объекту элемента, то нужно обновлять его поля с сохранением <code>$object->setName('BlaBla')->save();</code>
+        </p>
+    </div>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Устаревшие методы сущности</h2>
+
+    <pre class="small-text">
+        # Добавление элемента <br>
+        ElementTable::add(array: $data); <br>
+    </pre>
+
+    <p class="note small-text">
+        Для добавления стоит использовать конструкцию вида:
+    </p>
+
+    <pre class="note small-text">
+        <code>ElementTable::createObject()->setName('BlaBla')->save();</code>
+        <code>&nbsp;</code>
+        <code>$item1      = ElementTable::createObject()->setName('BlaBla');</code>
+        <code>$item2      = ElementTable::createObject()->setName('BlaBla');</code>
+        <code>$collection = ElementTable::createCollection();</code>
+        <code>$collection->add($item1);</code>
+        <code>$collection->add($item2);</code>
+        <code>$collection->save();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Устаревшие методы сущности</h2>
+
+    <pre class="small-text next">
+        # Запрос по параметрам<br>
+        ElementTable::getList(array: $parameters = []);
+    </pre>
+    <pre class="small-text next">
+        # Получение элемента по параметрам<br>
+        ElementTable::getByPrimary(mixed: $primary, array: $parameters = []);
+    </pre>
+    <pre class="small-text next">
+        # Получение элемента по ID<br>
+        ElementTable::getById(mixed: $id);
+    </pre>
+</section>
+
+<section class="slide">
+    <h2 class="place">Query. Объект запроса</h2>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление полей в выбору</h2>
+
+    <ul>
+        <li class="next">
+            setSelect(array: <b>fields</b>) # Плохо
+        </li>
+        <li class="next">
+            addSelect(string: <b>field</b>)
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        Обращение к полям связей происходит через точку
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление полей в выбору</h2>
+
+    <pre class="small-text">
+        <code>ElementTable::query()</code>
+        <code>    ->setSelect(['NAME', 'CITY.NAME']) // Плохо</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->addSelect('CITY.NAME');</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление новых полей в процессе выборки</h2>
+
+    <p>
+        registerRuntimeField(object: <b>Field</b>)
+    </p>
+    <pre class="small-text">
+        <code>registerRuntimeField(new Reference(</code>
+        <code>    'REF_CITY',</code>
+        <code>    CityTable::class,</code>
+        <code>    Join::on('this.CITY.VALUE', 'ref.ID')</code>
+        <code>))</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление новых полей в процессе выборки</h2>
+
+    <p>
+        registerRuntimeField(string: <b>name</b>, array <b>fieldInfo</b>) # Плохо
+    </p>
+
+    <pre class="small-text">
+        <code>registerRuntimeField('REF_CITY', [</code>
+        <code>    'data_type' => CityTable::class,</code>
+        <code>    'reference' => ['=this.CITY.VALUE' => 'ref.ID'],</code>
+        <code>    'join_type' => 'LEFT',</code>
+        <code>])</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление новых полей в процессе выборки</h2>
+
+    <p>
+        Данный вариант менее предпочтительный, чем добавление поля в описание сущности
+    </p>
+
+    <p>
+        Придется дублировать код описания при каждой выборке, также к нему нельзя обратиться через магический <code>get{Name}</code>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Добавление новых полей в процессе выборки</h2>
+
+    <pre class="small-text">
+        <code>ElementTable::query()</code>
+        <code>    ->registerRuntimeField(new Reference(</code>
+        <code>        'REF_CITY',</code>
+        <code>        CityTable::class,</code>
+        <code>        Join::on('this.CITY.VALUE', 'ref.ID')</code>
+        <code>    ))</code>
+        <code>    ->addSelect(new Reference(</code>
+        <code>        'REF_CITY',</code>
+        <code>        CityTable::class,</code>
+        <code>        Join::on('this.CITY.VALUE', 'ref.ID')</code>
+        <code>    ));</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Старый синтаксис</h2>
+
+    <ul>
+        <li class="next">
+            setFilter(array: <b>filter</b>)
+        </li>
+        <li class="next">
+            addFilter(string: <b>field</b>, mixed: <b>value</b>)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Старый синтаксис</h2>
+
+    <pre class="small-text">
+        <code>ElementTable::query()</code>
+        <code>    ->setFilter(['=ID' => 10])</code>
+        <code>    ->addFilter('=ID', 10);</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Актуальный синтаксис</h2>
+
+    <ul>
+        <li class="next">
+            where(string: field, string: operator, mixed: value)
+        </li>
+        <li class="next">
+            where(string: field, mixed: value)
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        Помимо <code>where</code> есть заготовленные методы для разных операторов фильтра. Также для каждого из типов фильтра есть отрицательный вариант <code>whereNot</code> или
+        <code>where{Operator}Not</code>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Актуальный синтаксис</h2>
+
+    <ul>
+        <li class="next">
+            whereNull(string: <b>field</b>)
+        </li>
+        <li class="next">
+            whereIn(string: <b>field</b>, array: <b>values</b>)
+        </li>
+        <li class="next">
+            whereLike(string: <b>field</b>, string: <b>value</b>)
+        </li>
+        <li class="next">
+            whereMatch(string: <b>field</b>, string: <b>value</b>)
+        </li>
+        <li class="next">
+            whereBetween(string: <b>field</b>, mixed: <b>valueMin</b>, mixed: <b>valueMax</b>)
+        </li>
+        <li class="next">
+            whereExists(Query|SqlExpression: <b>query</b>)
+        </li>
+        <li class="next">
+            whereColumn(string: <b>field</b>, string: <b>field</b>)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Актуальный синтаксис</h2>
+
+    <p class="small-text">
+        Мало кто знает, но <code>whereColumn('FIELD_1', 'FIELD_2')</code> является оберткой над <br><code>where('FIELD_1', new \Query\Filter\Expression\Column('FIELD_2'))</code>
+    </p>
+
+    <p class="small-text note">
+        Зная это можно быстро составлять выражения равенства между колонками
+    </p>
+
+    <pre class="small-text">
+        <code>whereIn('LOGIN', [</code>
+        <code>    new Column('NAME'),</code>
+        <code>    new Column('LAST_NAME')</code>
+        <code>])</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Сложные правила</h2>
+
+    <p>
+        Все добавленные фильтры в <code>query</code> имеют логику AND
+    </p>
+
+    <p>
+        Если нужно сделать более сложные или вложенные правила, то можно в <code>where</code> передать объект фильтра
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Сложные правила</h2>
+
+    <pre class="small-text">
+        <code>use \Bitrix\Iblock\ORM\Query;</code>
+        <code>$filter = Query::filter()</code>
+        <code>    ->logic(Query::filter()::LOGIC_OR)</code>
+        <code>    ->where('CODE', 'test')</code>
+        <code>    ->where('CODE', 'test_test')</code>
+        <code>    ->whereNull('CODE');</code>
+        <code>&nbsp;</code>
+        <code>// Сделать все условия фильтра негативными</code>
+        <code>// $filter->negative();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Сложные правила</h2>
+
+    <pre class="small-text">
+        <code>ElementTable::query()</code>
+        <code>    ->whereNotNull('CITY')</code>
+        <code>    ->whereBetween('ID', 1, 100)</code>
+        <code>    ->whereIn('USER.LOGIN', [</code>
+        <code>        new Column('USER.NAME'),</code>
+        <code>        new Column('USER.LAST_NAME')</code>
+        <code>    ])</code>
+        <code>    ->where($filter);</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Фильтр запроса. Сложные правила</h2>
+
+    <p>
+        Если понадобится список операторов фильтра можно посмотреть тут:
+    </p>
+
+    <ul>
+        <li class="next">
+            <code>\Bitrix\Main\ORM\Query\Filter\Operator::get()</code>
+        </li>
+        <li class="next">
+            <code>CAllSQLWhere::$operations</code>
+        </li>
+        <li class="next">
+            <code>CAllIBlock::MkOperationFilter()</code>
+            <p class="note small-text">
+                На крайний случая можно заглянуть в этот метод (он парсит строки старого фильтра в<code>getList</code>)
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Остальное</h2>
+
+    <ul>
+        <li class="next">
+            setOrder(array: <b>fields</b>) # Плохо
+        </li>
+        <li class="next">
+            addOrder(string: <b>field</b>, string: <b>order</b> = 'ASC')
+        </li>
+        <li class="next">
+            setLimit(int: <b>limit</b>)
+        </li>
+        <li class="next">
+            setOffset(int: <b>offset</b>)
+        </li>
+        <li class="next">
+            setCacheTtl(int: <b>ttl</b>)
+        </li>
+        <li class="next">
+            cacheJoins(bool: <b>mode</b>)
+        </li>
+        <li class="next">
+            countTotal(bool: <b>count</b>)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <p class="place">
+        Нужно ли использовать <code>exec()</code> перед <code>fetchCollection()</code> или <code>fetchObject()</code>?
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Получение результата</h2>
+
+    <p>
+        Если для рабочей сущности были заранее сгенерированы аннотации, то <code>exec</code> можно опустить. В противном случае его обязательно нужно указывать, для корректной работы подсказок IDE
+    </p>
+
+    <table>
+        <tr>
+            <td>
+                <pre class="small-text">$query->fetchCollection();</pre>
+            </td>
+            <td>
+                <pre class="small-text">$query->exec()->fetchCollection();</pre>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <pre class="small-text">$query->fetchObject();</pre>
+            </td>
+            <td>
+                <pre class="small-text">$query->exec()->fetchObject();</pre>
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Query. Получение результата</h2>
+
+    <pre class="small-text">
+        <code>// Bitrix\Main\ORM\Query\Query</code>
+        <code>/**</code>
+        <code> * Short alias for $result->fetchCollection()</code>
+        <code> *</code>
+        <code> * @return null Actual type should be annotated by orm:annotate</code>
+        <code> * @throws Main\ObjectPropertyException</code>
+        <code> * @throws Main\SystemException</code>
+        <code> */</code>
+        <code>public function fetchCollection()</code>
+        <code>{</code>
+        <code>    return $this->exec()->fetchCollection();</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2 class="place">EntityObject. Объект элемента</h2>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Setters</h2>
+
+    <ul>
+        <li class="next">
+            set(string: <b>field</b>, mixed: <b>value</b>)
+            <p class="small-text">
+                Установка значения
+            </p>
+        </li>
+        <li class="next">
+            reset(string: <b>field</b>)
+            <p class="small-text">
+                Сброс установленного значения
+            </p>
+        </li>
+        <li class="next">
+            unset(string: <b>field</b>)
+            <p class="small-text">
+                Удаление значения (словно не добавляли select)
+            </p>
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        При наличии аннотаций доступны магические аналоги конкретных полей
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Getters</h2>
+
+    <ul>
+        <li class="next">
+            get(string: <b>field</b>)
+            <p class="small-text">
+                Получение значения
+            </p>
+        </li>
+        <li class="next">
+            require(string: <b>field</b>)
+            <p class="small-text">
+                Обязательное получение значения. В случае его отсутствия выбрасывается <code>SystemException</code>
+            </p>
+        </li>
+        <li class="next">
+            remindActual(string: <b>field</b>)
+            <p class="small-text">
+                Получение актуального значения для БД,а не установленного в процессе
+            </p>
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        При наличии аннотаций доступны магические аналоги конкретных полей
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Getters</h2>
+
+    <p>
+        Если нужно быстро получить массив значений всех полей, то можно воспользоваться методом <code>collectValues()</code>
+    </p>
+
+    <p>
+        Особенно удобно, когда в выборке только скалярные поля. Дабы код был типизирован и читаем следует использовать только где это правда необходимо, а не всегда!)
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Множественные отношения</h2>
+
+    <ul>
+        <li class="next">
+            addTo(string: <b>field</b>, mixed: <b>value</b>)
+            <p class="small-text">
+                Добавление значения где value &mdash; это ключ или объект
+            </p>
+        </li>
+        <li class="next">
+            removeFrom(string: <b>field</b>, mixed: <b>value</b>)
+            <p class="small-text">
+                Удаление значения где value &mdash; это ключ или объект
+            </p>
+        </li>
+        <li class="next">
+            removeAll(string: <b>field</b>)
+            <p class="small-text">
+                Удаление всех значений
+            </p>
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        При наличии аннотаций доступны магические аналоги конкретных полей
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Проверки полей</h2>
+
+    <ul>
+        <li class="next">
+            isFilled(string: <b>field</b>)
+            <p class="small-text">
+                Содержит ли актуальное значение из БД
+            </p>
+        </li>
+        <li class="next">
+            isChanged(string: <b>field</b>)
+            <p class="small-text">
+                Было ли установлено новое значение
+            </p>
+        </li>
+        <li class="next">
+            has(string: <b>field</b>)
+            <p class="small-text">
+                Это <code>isFilled() || isChanged()</code>
+            </p>
+        </li>
+    </ul>
+
+    <p class="note small-text next">
+        При наличии аннотаций доступны магические аналоги конкретных полей
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Свойства объекта</h2>
+
+    <ul>
+        <li class="next">
+            entity
+            <p class="small-text">
+                Объект сущности. Полезно получения списка полей / свойств и данных инфоблока
+            </p>
+        </li>
+        <li class="next">
+            customData
+            <p class="small-text">
+                Объект <code>\Bitrix\Main\Type\Dictionary</code>. Полезно для хранения своих данных привязанных к объекту элемента. Имеет методы <code>set</code> и <code>get</code>
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Остальное</h2>
+
+    <ul>
+        <li class="next">
+            save()
+            <p class="small-text">
+                Сохранение всех изменений объекта в БД
+            </p>
+        </li>
+        <li class="next">
+            delete()
+            <p class="small-text">
+                Удаление элемента из БД
+            </p>
+        </li>
+        <li class="next">
+            fill(mixed: <b>value</b>)
+            <p class="small-text">
+                Делает подзапрос для заполнение недостающий полей объекта. Где <code>value</code> &mdash; это поле, массив полей или маска полей
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. EntityObject. Остальное</h2>
+
+    <pre class="small-text">
+        # Возможные маски полей <br>
+        # \Bitrix\Main\ORM\Fields\FieldTypeMask <br>
+        FieldTypeMask::SCALAR <br>
+        FieldTypeMask::EXPRESSION <br>
+        FieldTypeMask::USERTYPE <br>
+        FieldTypeMask::REFERENCE <br>
+        FieldTypeMask::ONE_TO_MANY <br>
+        FieldTypeMask::MANY_TO_MANY <br>
+        FieldTypeMask::FLAT <br>
+        FieldTypeMask::RELATION <br>
+        FieldTypeMask::ALL
+    </pre>
+</section>
+
+<section class="slide">
+    <h2 class="place">Collection. Объект коллекции элементов</h2>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Collection</h2>
+
+    <p>
+        Класс коллекции реализует интерфейсы <code>ArrayAccess</code>, <code>Iterator</code>, <code>Countable</code>
+    </p>
+
+    <p>
+        Для доступа к элементам можно перебирать коллекцию в цикле или же использовать метод <code>getAll()</code>, который вернет содержащиеся в ней объекты
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Collection</h2>
+
+    <ul>
+        <li class="next">
+            add(EntityObject: <b>object</b>)
+            <p class="small-text">
+                Добавление элемента в коллекцию
+            </p>
+        </li>
+        <li class="next">
+            remove(EntityObject: <b>object</b>)
+            <p class="small-text">
+                Удаление элемента из коллекции
+            </p>
+        </li>
+        <li class="next">
+            has(EntityObject: <b>object</b>)
+            <p class="small-text">
+                Наличие конкретного объекта в коллекции
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Collection</h2>
+
+    <p>
+        Аналогично предыдущему слайду, но в параметра передается <code>primary</code> объекта
+    </p>
+
+    <ul>
+        <li class="next">
+            getByPrimary(mixed: <b>primary</b>)
+        </li>
+        <li class="next">
+            removeByPrimary(mixed: <b>primary</b>)
+        </li>
+        <li class="next">
+            hasByPrimary(mixed: <b>primary</b>)
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Collection</h2>
+
+    <p>
+        Во избежании лишних итераций циклов можно получать данные прямо из коллекции. Для этого есть два метода:
+    </p>
+
+    <ul>
+        <li class="next">
+            get{fieldName}List
+            <p class="small-text">
+                Получает массив значений поля. Можно использовать как для скалярных полей, так и для связей <br>
+                <code>$collection->getIdList()</code>
+            </p>
+        </li>
+        <li class="next">
+            get{fieldName}Collection
+            <p class="small-text">
+                Получает массив значений поля. Можно использовать только для связей
+                <br>
+                <code>$collection->getCityList()</code>
+                <br>
+                <code>$collection->getCityCollection()</code>
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Базовый синтаксис. Collection</h2>
+
+    <ul>
+        <li class="next">
+            entity
+            <p class="small-text">
+                Объект сущности. Полезно получения списка полей / свойств и данных инфоблока
+            </p>
+        </li>
+        <li class="next">
+            fill(mixed: <b>value</b>)
+            <p class="small-text">
+                Делает подзапрос для заполнение недостающий полей коллекции. Где <code>value</code> &mdash; это поле, массив полей или маска полей
+            </p>
+        </li>
+        <li class="next">
+            save()
+            <p class="small-text">
+                Сохранение изменений коллекции в БД
+            </p>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2 class="place">Решение типичных задач</h2>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач</h2>
+
+    <p>
+        Далее будут примеры работы с несколькими инфоблоками
+    </p>
+
+    <ul>
+        <li class="next">
+            People (Человек (ID, NAME, HOME))
+            <ul class="note small-text">
+                <li>
+                    Множественная привязка к элементам инфоблока HOME
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            Home (Дом (ID, NAME, CITY, STREET))
+            <ul class="note small-text">
+                <li>
+                    Одиночная привязка к элементам инфоблока CITY
+                </li>
+                <li>
+                    Одиночная привязка к элементам инфоблока STREET
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            Street (Улица (ID, NAME, CITY))
+            <ul class="note small-text">
+                <li>
+                    Одиночная привязка к элементам инфоблока CITY
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            City (Город (ID, NAME))
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач</h2>
+
+    <h3>Задача №1</h3>
+
+    <p>
+        Построить отображение имен жителей по 5 с пагинацией на ORM
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №1</h2>
+
+    <p class="small-text">
+        Создаем и заполняем объект пагинации <br>
+        <code>\Bitrix\Main\UI\PageNavigation</code>
+    </p>
+
+    <pre class="small-text">
+        <code>$nav = new PageNavigation('people-nav');</code>
+        <code>$nav->allowAllRecords(true);</code>
+        <code>$nav->setPageSize(5);</code>
+        <code>$nav->initFromUri();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №1</h2>
+
+    <p class="small-text">
+        Формируем выборку
+    </p>
+
+    <pre class="small-text">
+        <code>$query      = ElementPeopleTable::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->setLimit($nav->getLimit())</code>
+        <code>    ->setOffset($nav->getOffset())</code>
+        <code>    ->countTotal(true);</code>
+        <code>$exec       = $query->exec();</code>
+        <code>$collection = $exec->fetchCollection();</code>
+        <code>$nav->setRecordCount($exec->getCount());</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №1</h2>
+
+    <p class="small-text">
+        Вывод имен
+    </p>
+
+    <pre class="small-text">
+        <code>foreach ($collection as $item) {</code>
+        <code>    echo $item->getName() . '&lt;br&gt;';</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №1</h2>
+
+    <p class="small-text">
+        Вывод пагинации. Для этого есть готовый компонент в параметры которого нужно передать объект пагинации (сформированный ранее)
+    </p>
+
+    <pre class="small-text">
+        <code>$APPLICATION->IncludeComponent(</code>
+        <code>    'bitrix:main.pagenavigation',</code>
+        <code>    '',</code>
+        <code>    [</code>
+        <code>        'NAV_OBJECT' => $nav,</code>
+        <code>        'SEF_MODE'   => 'N',</code>
+        <code>    ],</code>
+        <code>    false</code>
+        <code>);</code>
+    </pre>
+</section>
+
+<section class="slide clear listing-code">
+    <pre class="cover">
+        <code>use Bitrix\Iblock\Elements\ElementPeopleTable;</code>
+        <code>use Bitrix\Main\UI\PageNavigation;</code>
+        <code>&nbsp;</code>
+        <code>require($_SERVER['DOCUMENT_ROOT'] . '/bitrix/header.php');</code>
+        <code>&nbsp;</code>
+        <code>$nav = new PageNavigation('people-nav');</code>
+        <code>$nav->allowAllRecords(true)</code>
+        <code>    ->setPageSize(5)</code>
+        <code>    ->initFromUri();</code>
+        <code>&nbsp;</code>
+        <code>$query = ElementPeopleTable::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->setLimit($nav->getLimit())</code>
+        <code>    ->setOffset($nav->getOffset())</code>
+        <code>    ->countTotal(true);</code>
+        <code>&nbsp;</code>
+        <code>$exec       = $query->exec();</code>
+        <code>$collection = $exec->fetchCollection();</code>
+        <code>&nbsp;</code>
+        <code>$nav->setRecordCount($exec->getCount());</code>
+        <code>&nbsp;</code>
+        <code>foreach ($collection as $item) {</code>
+        <code>    echo $item->getName() . '&lt;br&gt;';</code>
+        <code>}</code>
+        <code>&nbsp;</code>
+        <code>$APPLICATION->IncludeComponent(</code>
+        <code>    'bitrix:main.pagenavigation',</code>
+        <code>    '',</code>
+        <code>    [</code>
+        <code>        'NAV_OBJECT' => $nav,</code>
+        <code>        'SEF_MODE'   => 'N',</code>
+        <code>    ],</code>
+        <code>    false</code>
+        <code>);</code>
+        <code>&nbsp;</code>
+        <code>require($_SERVER['DOCUMENT_ROOT'] . '/bitrix/footer.php');</code>
+    </pre>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NmY4MjU.png" alt="Решение задачи №1">
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач</h2>
+
+    <h3>Задача №2</h3>
+
+    <p>
+        Добавить к предыдущим условиям отображение домов жителей (множественное свойство)
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №2</h2>
+
+    <p>
+        Если используется лимит в запросе, то множественные поля нельзя добавлять в выборку &mdash; результат будет некорректный
+    </p>
+
+    <p>
+        Дело в том, что на уровне sql добавленное в выборку множественное поле это отдельная запись. Лимит сработает на количество записей, а не на количество уникальных элементов в запросе
+    </p>
+
+    <p>
+        <strong>Решение &mdash;</strong> поместить все множественные поля в <code>fill()</code> коллекции
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №2</h2>
+
+    <p class="small-text">
+        Заполняем недостающие данные методом <code>fill()</code>
+    </p>
+
+    <pre class="small-text">
+        <code>$query      = ElementPeopleTable::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->setLimit($nav->getLimit())</code>
+        <code>    ->setOffset($nav->getOffset())</code>
+        <code>    ->countTotal(true);</code>
+        <code>$exec       = $query->exec();</code>
+        <code>$collection = $exec->fetchCollection();</code>
+        <code><strong>$collection->fill(['HOME.ELEMENT']);</strong></code>
+        <code>$nav->setRecordCount($exec->getCount());</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №2</h2>
+
+    <p class="small-text">
+        Правим цикл
+    </p>
+
+    <pre class="small-text">
+        <code>foreach ($collection as $item) {</code>
+        <code>    /** @var EO_ElementHome_Collection $homes */</code>
+        <code>    $homes = $item->getHome()->getElementCollection();</code>
+        <code>&nbsp;</code>
+        <code>    $name = 'Житель: ' . $item->getName() . ';&lt;br&gt;';</code>
+        <code>    $home = 'Дома: ' . implode('; ', $homes->getNameList()) . '&lt;br&gt;';</code>
+        <code>    echo $name . $home . '&lt;br&gt;';</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MDNkNGI.png" alt="Решение задачи №2">
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач</h2>
+
+    <h3>Задача №3</h3>
+
+    <p>
+        Добавить к предыдущим условиям отображение названия города
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <h3 class="cover">
+        Есть идеи как это сделать?
+    </h3>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <ul>
+        <li class="next">
+            People (Человек (ID, NAME, HOME))
+            <ul class="note small-text">
+                <li>
+                    Множественная привязка к элементам инфоблока HOME
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            Home (Дом (ID, NAME, CITY, STREET))
+            <ul class="note small-text">
+                <li>
+                    Одиночная привязка к элементам инфоблока CITY
+                </li>
+                <li>
+                    Одиночная привязка к элементам инфоблока STREET
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            Street (Улица (ID, NAME, CITY))
+            <ul class="note small-text">
+                <li>
+                    Одиночная привязка к элементам инфоблока CITY
+                </li>
+            </ul>
+        </li>
+        <li class="next">
+            City (Город (ID, NAME))
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Самый поверхностный вариант &mdash; это делать подзапрос в другую таблицу по полученному ID дома. Нежизнеспособный вариант и вот почему:
+    </p>
+
+    <ul>
+        <li class="next">
+            Минимум один дополнительный запрос для одного элемента
+        </li>
+        <li class="next">
+            Работаем с коллекцией, поэтому количество запросов умножается на количество итераций
+        </li>
+        <li class="next">
+            Вытекающие из предыдущих пунктов код и производительность
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Правильный вариант &mdash; это добавление новых связей для получениях их в одном запросе
+    </p>
+
+    <p>
+        Самый правильный вариант &mdash; это модификация сущности, чтобы эти поля были доступны по всему коду проекта
+    </p>
+
+    <p>
+        Пока пойдем по первому варианту
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Пагинация
+    </p>
+
+    <pre class="small-text">
+        <code>$nav = new PageNavigation('people-nav');</code>
+        <code>$nav->allowAllRecords(true)</code>
+        <code>    ->setPageSize(5)</code>
+        <code>    ->initFromUri();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Получаем объект таблицы и сущности
+    </p>
+
+    <pre class="small-text">
+        <code>$table  = new ElementPeopleTable();</code>
+        <code>$entity = $table::getEntity();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Получаем нужное поле сущности, помогаем IDE, указывая её реальный класс, и добавляем необходимую связь
+    </p>
+
+    <pre class="small-text">
+        <code>/** @var PropertyOneToMany $homeProperty */</code>
+        <code>$homeProperty = $entity->getField('HOME');</code>
+        <code>$homeProperty->getRefEntity()->addField(new Reference(</code>
+        <code>    'ITEM',</code>
+        <code>    ElementHomeTable::getEntity(),</code>
+        <code>    Join::on('this.VALUE', 'ref.ID')</code>
+        <code>));</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Далее обращаемся к таблице для построения запроса
+    </p>
+
+    <pre class="small-text">
+        <code>$query = $table::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->setLimit($nav->getLimit())</code>
+        <code>    ->setOffset($nav->getOffset())</code>
+        <code>    ->countTotal(true);</code>
+        <code>$exec       = $query->exec();</code>
+        <code>$collection = $exec->fetchCollection();</code>
+        <code>$collection->fill(['HOME.ITEM.CITY.ELEMENT.NAME']);</code>
+        <code>$nav->setRecordCount($exec->getCount());</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Правим работу с данными в цикле
+    </p>
+
+    <pre class="small-text">
+        <code>foreach ($collection as $item) {</code>
+        <code>    $cityNames = [];</code>
+        <code>    foreach ($item->getHome() as $home) {</code>
+        <code>        $cityNames[] = $home->get('ITEM')->get('CITY')->get('ELEMENT')->get('NAME');</code>
+        <code>    }</code>
+        <code>&nbsp;</code>
+        <code>    $name = 'Житель: ' . $item->getName() . '&lt;br&gt;';</code>
+        <code>    $home = 'Дома: ' . implode('; ', $cityNames) . '&lt;br&gt;';</code>
+        <code>    echo $name . $home . '&lt;br&gt;';</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение типичных задач. Задача №3</h2>
+
+    <p>
+        Вывод пагинации
+    </p>
+
+    <pre class="small-text">
+        <code>$APPLICATION->IncludeComponent(</code>
+        <code>    'bitrix:main.pagenavigation',</code>
+        <code>    '',</code>
+        <code>    [</code>
+        <code>        'NAV_OBJECT' => $nav,</code>
+        <code>        'SEF_MODE'   => 'N',</code>
+        <code>    ],</code>
+        <code>    false</code>
+        <code>);</code>
+    </pre>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://i.imgur.com/L12QYvz.png" alt="Решение задачи №3">
+</section>
+
+<section class="slide">
+    <h2 class="place">Расширение таблиц</h2>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц</h2>
+
+    <p>
+        Стандартную сущность можно и нужно расширять путем наследования, а как быть с динамическими сущностями?
+    </p>
+
+    <p>
+        Ответ: никак. При попытке наследования от такой сущности вы получите ошибку. Есть только косвенное решение
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p>
+        Как пример можно рассмотреть расширение таблицы свойств
+    </p>
+
+    <p>
+        Добавим возможность получить коллекцию значений свойства
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p>
+        Наследуемcя с определением <code>getMap()</code>. В данном случае можно <code>getTableName()</code> &mdash; реализован у родителя
+    </p>
+
+    <pre class="small-text">
+        <code>class PropertyTable extends \Bitrix\Iblock\PropertyTable</code>
+        <code>{</code>
+        <code>    public static function getMap(): array {...}</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p class="note small-text">
+        Реализация <code>getMap()</code> расширенной сущности <code>PropertyTable</code>. В данном случае <code>ElementPropertyTable</code> &mdash; это также расширенная версия и
+        <code>PROPERTY</code> указывает на поле типа <code>Reference</code>
+    </p>
+
+    <pre class="small-text">
+        <code>public static function getMap(): array</code>
+        <code>{</code>
+        <code>    $map           = parent::getMap();</code>
+        <code>    $map['VALUES'] = new OneToMany(</code>
+        <code>        'VALUES',</code>
+        <code>        ElementPropertyTable::class,</code>
+        <code>        'PROPERTY'</code>
+        <code>    );</code>
+        <code>    return $map;</code>
+        <code>}</code>
+    </pre>
+</section>
+
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p>
+        Наследуемcя с определением обоих методов <code>getTableName()</code> и <code>getMap()</code>
+    </p>
+
+    <pre class="small-text">
+        <code>class ElementPropertyTable extends \Bitrix\Iblock\ElementPropertyTable</code>
+        <code>{</code>
+        <code>    public static function getTableName(): string{...}</code>
+        <code>&nbsp;</code>
+        <code>    public static function getMap(): array {...}</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p class="note small-text">
+        Реализация <code>getTableName()</code> расширенной сущности <code>ElementPropertyTable</code>
+    </p>
+
+    <pre class="small-text">
+        <code>public static function getTableName(): string</code>
+        <code>{</code>
+        <code>    return 'b_iblock_element_property';</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Стандартная сущность</h2>
+
+    <p class="note small-text">
+        Реализация <code>getMap()</code> расширенной сущности <code>ElementPropertyTable</code>. Тут новое поле не только в роли новой связи, но и в роли ссылки для сущности
+        <code>PropertyTable</code> (для построения множественной связи)
+    </p>
+
+    <pre class="small-text">
+        <code>public static function getMap(): array</code>
+        <code>{</code>
+        <code>    $map             = parent::getMap();</code>
+        <code>    $map['PROPERTY'] = new Reference(</code>
+        <code>        'PROPERTY',</code>
+        <code>        PropertyTable::getEntity(),</code>
+        <code>        Join::on('this.IBLOCK_PROPERTY_ID', 'ref.ID')</code>
+        <code>    );</code>
+        <code>    return $map;</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность</h2>
+
+    <p class="cover">
+        Есть идеи как это сделать?
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность</h2>
+
+    <p>
+        Поскольку наследование от динамической сущности невозможно, то стоит искать обходной путь
+    </p>
+
+    <p>
+        Суть заключается в тех же самых действиях, что в задаче №3 &mdash; сначала модификация сгенерированной сущности, а затем выборка
+    </p>
+
+    <p class="small-text note">
+        Пример на основе структуры инфоблоков описанных ранее для задач
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p>
+        Создаем абстрактный класс <code>TableConfigurator</code>
+    </p>
+
+    <pre class="small-text">
+        <code>abstract class TableConfigurator</code>
+        <code>{</code>
+        <code>    private static $tables;</code>
+        <code>    private static function getInstance() {...}</code>
+        <code>    abstract protected static function configure(): void;</code>
+        <code>    abstract protected static function getTableClass(): string;</code>
+        <code>    public static function build() {...}</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p class="note small-text">
+        Закрытое свойство <code>$tables</code> хранит сконфигурированные экземпляры таблиц
+    </p>
+
+    <pre class="small-text">
+        <code>private static $tables;</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p class="note small-text">
+        Закрытый статичный метод <code>getInstance()</code> возвращает существующий или создает новый экземпляр таблицы
+    </p>
+
+    <pre class="small-text">
+        <code>private static function getInstance()</code>
+        <code>{</code>
+        <code>    if (isset(self::$tables[static::class])) {</code>
+        <code>        return self::$tables[static::class];</code>
+        <code>    } else {</code>
+        <code>        $tableClass = static::getTableClass();</code>
+        <code>        self::$tables[static::class] = new $tableClass();</code>
+        <code>        static::configure();</code>
+        <code>        return self::$tables[static::class];</code>
+        <code>    }</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p class="note small-text">
+        Публичный метод <code>build()</code> возвращает экземпляр таблицы
+    </p>
+
+    <pre class="small-text">
+        <code>public static function build()</code>
+        <code>{</code>
+        <code>    return static::getInstance();</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p class="note small-text">
+        Абстрактный защищенный метод <code>configure()</code> &mdash; это основной метод конфигурации сущности
+    </p>
+
+    <pre class="small-text">
+        <code>abstract protected static function configure(): void;</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p class="note small-text">
+        Абстрактный защищенный метод <code>getTableClass()</code> &mdash; это метод возвращающий класс конфигурируемой таблицы
+    </p>
+
+    <pre class="small-text">
+        <code>abstract protected static function getTableClass(): string;</code>
+    </pre>
+</section>
+
+<section class="slide clear listing-code">
+    <p class="small-text">Сущность
+        <mark>житель</mark>
+    </p>
+    <pre class="cover">
+        <code>final class PeopleTable extends TableConfigurator</code>
+        <code>{</code>
+        <code>    public static function build(): ElementPeopleTable</code>
+        <code>    {</code>
+        <code>        return parent::build();</code>
+        <code>    }</code>
+        <code>&nbsp;</code>
+        <code>    protected static function configure(): void</code>
+        <code>    {</code>
+        <code>        self::configureHomeProperty();</code>
+        <code>    }</code>
+        <code>&nbsp;</code>
+        <code>    protected static function getTableClass(): string</code>
+        <code>    {</code>
+        <code>        return ElementPeopleTable::class;</code>
+        <code>    }</code>
+        <code>&nbsp;</code>
+        <code>    protected static function configureHomeProperty(): void</code>
+        <code>    {</code>
+        <code>        $entity = self::build()::getEntity();</code>
+        <code>        /** @var PropertyOneToMany $field */</code>
+        <code>        $field     = $entity->getField('HOME');</code>
+        <code>        $refEntity = $field->getRefEntity();</code>
+        <code>&nbsp;</code>
+        <code>        $refEntity->addField(new Reference(</code>
+        <code>            'ITEM',</code>
+        <code>            HomeTable::build()::getEntity(),</code>
+        <code>            Join::on('this.VALUE', 'ref.ID')</code>
+        <code>        ));</code>
+        <code>    }</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide clear listing-code">
+    <p class="small-text">Сущность
+        <mark>дом</mark>
+    </p>
+    <pre class="cover">
+        <code>final class HomeTable extends TableConfigurator</code>
+        <code>{</code>
+        <code>    public static function build(): ElementHomeTable</code>
+        <code>    {</code>
+        <code>        return parent::build();</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function configure(): void</code>
+        <code>    {</code>
+        <code>        self::configureStreetProperty();</code>
+        <code>        self::configureCityProperty();</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function getTableClass(): string</code>
+        <code>    {</code>
+        <code>        return ElementHomeTable::class;</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function configureStreetProperty(): void</code>
+        <code>    {</code>
+        <code>        $entity = self::build()::getEntity();</code>
+        <code>        </code>
+        <code>        /** @var PropertyReference $field */</code>
+        <code>        $field     = $entity->getField('STREET');</code>
+        <code>        $refEntity = $field->getRefEntity();</code>
+        <code>        </code>
+        <code>        $refEntity->addField(new Reference(</code>
+        <code>            'ITEM',</code>
+        <code>            StreetTable::build()::getEntity(),</code>
+        <code>            Join::on('this.VALUE', 'ref.ID')</code>
+        <code>        ));</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function configureCityProperty(): void</code>
+        <code>    {</code>
+        <code>        $entity = self::build()::getEntity();</code>
+        <code>        </code>
+        <code>        /** @var PropertyReference $field */</code>
+        <code>        $field     = $entity->getField('CITY');</code>
+        <code>        $refEntity = $field->getRefEntity();</code>
+        <code>        </code>
+        <code>        $refEntity->addField(new Reference(</code>
+        <code>            'ITEM',</code>
+        <code>            ElementCityTable::getEntity(),</code>
+        <code>            Join::on('this.VALUE', 'ref.ID')</code>
+        <code>        ));</code>
+        <code>    }</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide clear listing-code">
+    <p class="small-text">Сущность
+        <mark>улица</mark>
+    </p>
+    <pre class="cover">
+        <code>final class StreetTable extends TableConfigurator</code>
+        <code>{</code>
+        <code>    public static function build(): ElementStreetTable</code>
+        <code>    {</code>
+        <code>        return parent::build();</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function configure(): void</code>
+        <code>    {</code>
+        <code>        self::configureCityProperty();</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function getTableClass(): string</code>
+        <code>    {</code>
+        <code>        return ElementStreetTable::class;</code>
+        <code>    }</code>
+        <code>    </code>
+        <code>    protected static function configureCityProperty(): void</code>
+        <code>    {</code>
+        <code>        $entity = self::build()::getEntity();</code>
+        <code>        </code>
+        <code>        /** @var PropertyReference $field */</code>
+        <code>        $field     = $entity->getField('CITY');</code>
+        <code>        $refEntity = $field->getRefEntity();</code>
+        <code>        </code>
+        <code>        $refEntity->addField(new Reference(</code>
+        <code>            'ITEM',</code>
+        <code>            ElementCityTable::getEntity(),</code>
+        <code>            Join::on('this.VALUE', 'ref.ID')</code>
+        <code>        ));</code>
+        <code>    }</code>
+        <code>}</code>
+    </pre>
+</section>
+
+<section class="slide clear listing-code">
+    <pre class="cover">
+        <code>// Формирование объекта пагинации</code>
+        <code>&nbsp;</code>
+        <code>$query = PeopleTable::build()::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->setLimit($nav->getLimit())</code>
+        <code>    ->setOffset($nav->getOffset())</code>
+        <code>    ->countTotal(true);</code>
+        <code>&nbsp;</code>
+        <code>$exec       = $query->exec();</code>
+        <code>$collection = $exec->fetchCollection();</code>
+        <code>&nbsp;</code>
+        <code>$nav->setRecordCount($exec->getCount());</code>
+        <code>&nbsp;</code>
+        <code>$collection->fill([</code>
+        <code>    'HOME.ITEM.NAME',</code>
+        <code>    'HOME.ITEM.STREET.ITEM.NAME',</code>
+        <code>    'HOME.ITEM.CITY.ITEM.NAME',</code>
+        <code>]);</code>
+        <code>&nbsp;</code>
+        <code>foreach ($collection as $item) {</code>
+        <code>    $addresses = [];</code>
+        <code>    foreach ($item->getHome() as $home) {</code>
+        <code>        $homeName   = $home->get('ITEM')->getName();</code>
+        <code>        $streetName = $home->get('ITEM')->get('STREET')->get('ITEM')->getName();</code>
+        <code>        $cityName   = $home->get('ITEM')->get('CITY')->get('ITEM')->getName();</code>
+        <code>        </code>
+        <code>        $addresses[] = "д.$homeName ул.$streetName г.$cityName";</code>
+        <code>    }</code>
+        <code>&nbsp;</code>
+        <code>    $name = 'Житель: ' . $item->getName() . '&lt;br&gt;';</code>
+        <code>    $home = implode('&lt;br&gt;', $addresses) . '&lt;br&gt;';</code>
+        <code>    echo $name . $home . '&lt;br&gt;';</code>
+        <code>}</code>
+        <code>&nbsp;</code>
+        <code>// Вызов компонента пагинации</code>
+    </pre>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/OTNhNWN.png" alt="Решение задачи №3 после модификации сущностей">
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p>Плюсы</p>
+
+    <ul>
+        <li class="next">
+            Избегаем дублирования кода
+        </li>
+        <li class="next">
+            Имеем только одну модифицированную модель
+        </li>
+        <li class="next">
+            Все описания полей в одном месте
+        </li>
+        <li class="next">
+            Основная сущность остается нетронутой &mdash; используем её при необходимости
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Расширение таблиц. Динамическая сущность. TableConfigurator</h2>
+
+    <p>Минусы</p>
+
+    <ul>
+        <li class="next">
+            Когда нибудь решат проблему наследования с код станет legacy
+        </li>
+        <li class="next">
+            Ввиду отсутствия явной связи с <code>DataManager</code> и отсутствия метода <code>getMap()</code> нет возможности получить аннотации по добавленным полям
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2 class="place">Решение нетипичных задач</h2>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач</h2>
+
+    <h3>Пример №1. Полнотекстовый поиск</h3>
+
+    <p>
+        Сначала необходимо с помощь миграций добавить индекс полям
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p class="note small-text">
+        Метод <code>up()</code> миграции на laravel
+    </p>
+
+    <pre class="small-text">
+        <code>DB::statement('CREATE fulltext index IXF_B_IBLOCK_ELEMENT_1 on b_iblock_element (NAME)');</code>
+        <code>DB::statement('CREATE fulltext index IXF_B_IBLOCK_ELEMENT_2 on b_iblock_element (PREVIEW_TEXT)');</code>
+    </pre>
+
+    <p class="note small-text">
+        Можно создать индекс для поля <code>SEARCHABLE_CONTENT</code> в которое по умолчанию пишутся поля <code>NAME</code>, <code>PREVIEW_TEXT</code>, <code>DETAIL_TEXT</code>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p class="note small-text">
+        Метод <code>down()</code> миграции на laravel
+    </p>
+
+    <pre class="small-text">
+        <code>Schema::table('b_iblock_element', function ($table) {</code>
+        <code>    $table->dropIndex('IXF_B_IBLOCK_ELEMENT_1');</code>
+        <code>    $table->dropIndex('IXF_B_IBLOCK_ELEMENT_2');</code>
+        <code>});</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p>
+        Для решения задач полнотекстового поиска в Query ORM добавили поддержку оператора <em>match</em>, а также помощник
+    </p>
+
+    <ul>
+        <li class="next">
+            <code>whereMatch()</code>
+        </li>
+        <li class="next">
+            <code>whereNotMatch()</code>
+        </li>
+        <li class="next">
+            <code>Bitrix\Main\ORM\Query\Filter\Helper::matchAgainstWildcard()</code>
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p>
+        Синтаксис оператора <em>MATCH</em>
+    </p>
+
+    <pre class="small-text">
+        <code>MATCH (col1,col2,...) AGAINST (expr [search_modifier])</code>
+    </pre>
+
+    <p class="note small-text">
+        Где <em>search_modifier</em> &mdash; это модификатор поиска. Возможные значения: <code>IN NATURAL LANGUAGE MODE</code>, <code>IN BOOLEAN MODE</code> или
+        <code>WITH QUERY EXPANSION</code>. Подробнее можно прочесть, например, тут <a href="https://habr.com/ru/post/40218/">https://habr.com/ru/post/40218/</a>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p>
+        ORM работает только со вторым <code>IN BOOLEAN MODE</code> &mdash; это полнотекстовый поиск в логическом режиме с возможностью использовать специальные операторы
+    </p>
+
+    <p class="note small-text">
+        Пример запроса:
+    </p>
+
+    <pre class="small-text">
+        <code>SELECT * FROM articles WHERE MATCH (title,body) AGAINST ('database' IN NATURAL LANGUAGE MODE);</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск</h2>
+
+    <p>
+        Подробнее можно почитать в документации <a href="https://dev.mysql.com/doc/refman/8.0/en/fulltext-boolean.html">https://dev.mysql.com/doc/refman/8.0/en/fulltext-boolean.html</a>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Отсутствие оператора &mdash; это логическое ИЛИ
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие по меньшей мере одно из этих слов <br>
+        apple banana
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Предшествующий слову знак
+        <mark>+ (плюс)</mark>
+        показывает, что это слово должно присутствовать в каждой возвращенной строке
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие оба слова <br>
+        +apple +juice
+    </blockquote>
+
+    <blockquote class="small-text">
+        находит строки, содержащие слово <strong>apple</strong>, но ранг строки выше, если она также содержит слово <strong>macintosh</strong> <br>
+        +apple macintosh
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Предшествующий слову знак
+        <mark>- (минус)</mark>
+        означает, что это слово не должно присутствовать в какой-либо возвращенной строке
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие слово <strong>apple</strong>, но не <strong>macintosh</strong> <br>
+        +apple -macintosh
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Скобки
+        <mark>( )</mark>
+        группируют слова в подвыражения
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Два оператора
+        <mark>< ></mark>
+        используются для того, чтобы изменить вклад слова в величину релевантности, которое приписывается строке. Оператор
+        <mark><</mark>
+        уменьшает этот вклад, а оператор
+        <mark>></mark> &mdash; увеличивает его
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие <strong>apple</strong> и <strong>pie</strong>, или <strong>apple</strong> и <strong>strudel</strong> (в любом порядке), но ранг <strong>apple pie</strong> выше, чем
+        <strong>apple strudel</strong><br>
+        +apple +(&gt;pie &lt;strudel)
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Предшествующий слову знак
+        <mark>~ (тильда)</mark>
+        воздействует как оператор отрицания, обуславливая негативный вклад данного слова в релевантность строки. Им отмечают нежелательные слова. Строка, содержащая
+        такое слово, будет оценена ниже других, но не будет исключена совершенно, как в случае оператора
+        <mark>- (минус)</mark>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Символ
+        <mark>* (звездочка)</mark>
+        является оператором усечения. В отличие от остальных операторов, она должна добавляться в конце слова, а не в начале
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие <strong>apple</strong>, <strong>apples</strong>, <strong>applesauce</strong>, или <strong>applet</strong><br>
+        apple*
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Операторы</h2>
+
+    <p>
+        Фраза, заключенная в
+        <mark>" (двойные кавычки)</mark>
+        , соответствует только строкам, содержащим эту фразу, написанную буквально
+    </p>
+
+    <blockquote class="small-text">
+        находит строки, содержащие <strong>some words of wisdom</strong>, но не <strong>some noise words</strong><br>
+        "some words"
+    </blockquote>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p class="note small-text">
+        При передачи в фильтр значения
+        <mark>Олег Анатольевич</mark>
+        без обработки будут найдены записи где есть хотя бы одно из слов
+    </p>
+
+    <p>
+        Запрос
+    </p>
+
+    <pre class="small-text">
+        <code>$collection = PeopleTable::build()::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->whereMatch('NAME', 'Олег Анатольевич')</code>
+        <code>    ->fetchCollection();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p class="note small-text">
+        При передачи в фильтр значения
+        <mark>Олег Анатольевич</mark>
+        без обработки будут найдены записи где есть хотя бы одно из слов
+    </p>
+
+    <p>
+        Результат
+    </p>
+
+    <pre class="small-text">
+        <code
+            style="white-space: pre-wrap; width: 100%">SELECT `iblock_elements_element_people`.`ID` AS `ID`, `iblock_elements_element_people`.`NAME` AS `NAME` FROM `b_iblock_element` `iblock_elements_element_people` WHERE MATCH (`iblock_elements_element_people`.`NAME`) AGAINST ('Олег Анатольевич' IN BOOLEAN MODE) AND `iblock_elements_element_people`.`IBLOCK_ID` = 33</code>
+        <code>Голубев Олег Анатольевич</code>
+        <code>Шварценеггер Олег Петрович</code>
+        <code>Викторович Олег</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p>
+        Чтобы результат был более корректным нужно обработать значение для поиска. Можно использовать готовый помощник
+        <code>Helper::matchAgainstWildcard('Олег Анатольевич','*')</code>, где второй параметр
+        <mark>wildcard</mark>
+        либо звезда, либо пустая строка
+    </p>
+
+    <p class="small-text note">
+        <em>wildcard</em> добавляется в конце каждого слова
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p>
+        Результат с предварительной обработкой помощником
+    </p>
+
+    <pre class="small-text">
+        <code
+            style="white-space: pre-wrap; width: 100%">SELECT `iblock_elements_element_people`.`ID` AS `ID`, `iblock_elements_element_people`.`NAME` AS `NAME` FROM `b_iblock_element` `iblock_elements_element_people` WHERE MATCH (`iblock_elements_element_people`.`NAME`) AGAINST ('(+Олег* +Анатол*)' IN BOOLEAN MODE) AND `iblock_elements_element_people`.`IBLOCK_ID` = 33</code>
+        <code>Голубев Олег Анатольевич</code>
+        <code>Олегович Анатолий</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p class="note small-text">
+        Добавим элемент с именем равным значению поиска
+        <mark>Олег Анатол</mark>
+        и увидим, что он оказался в конце списка при использовании помощника
+    </p>
+
+    <pre class="small-text">
+        <code>Голубев Олег Анатольевич</code>
+        <code>Олегович Анатольевичный</code>
+        <code>Олег Анатол</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p class="note small-text">
+        Это происходит из за использования операторов. Это можно подтвердить вернувшись к первому варианту без обработки значения помощником
+    </p>
+
+    <pre class="small-text">
+        <code>Олег Анатол</code>
+        <code>Голубев Олег Анатольевич</code>
+        <code>Шварценеггер Олег Петрович</code>
+        <code>Викторович Олег</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p>
+        Чтобы управлять процессом поиска мы должны самостоятельно обработать поисковую фразу. В моих тестах лучше всего себя показал шаблон <code>word1* word2*</code>
+    </p>
+
+    <p>
+        А для доступа к значения релевантности можно прибегнуть к небольшой хитрости
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p class="small-text note">
+        Обработка поисковой фразы и выборка с регистрацией временного поля релевантности
+    </p>
+
+    <pre class="small-text">
+        <code>$value = 'Олег Анатол';</code>
+        <code>// $value = Helper::matchAgainstWildcard($value);</code>
+        <code>$value   = implode('* ', explode(' ', $value . '*'));</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <pre class="small-text">
+        <code>$query = PeopleTable::build()::query()</code>
+        <code>    ->addSelect('ID')</code>
+        <code>    ->addSelect('NAME')</code>
+        <code>    ->addSelect('MATCH_SORT')</code>
+        <code>    ->registerRuntimeField(new ExpressionField(</code>
+        <code>        'MATCH_SORT',</code>
+        <code>        "MATCH (%s) AGAINST ('$value' IN BOOLEAN MODE)",</code>
+        <code>        ['NAME']</code>
+        <code>    ))</code>
+        <code>    ->addOrder('MATCH_SORT', 'DESC')</code>
+        <code>    ->whereMatch('NAME', $value)</code>
+        <code>    ->fetchCollection();</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p>
+        Сформированный запрос
+    </p>
+
+    <pre class="small-text">
+        <code
+            style="white-space: pre-wrap; width: 100%">SELECT `iblock_elements_element_people`.`ID` AS `ID`, `iblock_elements_element_people`.`NAME` AS `NAME`, MATCH (`iblock_elements_element_people`.`NAME`) AGAINST ('Олег* Анатол*' IN BOOLEAN MODE) AS `MATCH_SORT` FROM `b_iblock_element` `iblock_elements_element_people` WHERE MATCH (`iblock_elements_element_people`.`NAME`) AGAINST ('Олег* Анатол*' IN BOOLEAN MODE) AND `iblock_elements_element_people`.`IBLOCK_ID` = 33 ORDER BY `MATCH_SORT` DESC</code>
+    </pre>
+</section>
+
+<section class="slide ">
+    <h2>Решение нетипичных задач. Полнотекстовый поиск. Результат работы</h2>
+
+    <p>
+        Результат выборки
+    </p>
+
+    <pre class="small-text">
+        <code>Голубев Олег Анатольевич | 26.529659271240234</code>
+        <code>Олегович Анатольевичный | 26.529659271240234</code>
+        <code>Олег Анатол | 26.529659271240234</code>
+        <code>Шварценеггер Олег Петрович | 12.588944435119629</code>
+        <code>Викторович Олег | 12.588944435119629</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2 class="place">Проблемы и особенности использования</h2>
+</section>
+
+<section class="slide">
+    <h2>Проблемы и особенности использования</h2>
+    <p>Проблемы разделяются на две категории:</p>
+    <ul>
+        <li>
+            Общие проблемы с ORM;
+        </li>
+        <li>
+            Проблемы присущие ORM для инфоблоков.
+        </li>
+    </ul>
+
+    <p class="note">
+        Проверки производились на версии ядра: 20.0.1198
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <ul>
+        <li>
+            Построение объектных выборок с агрегациями;
+        </li>
+        <li>
+            Лимитированная выборка с <code>OneToMany</code> полем;
+        </li>
+        <li>
+            Использование <code>whereIn</code> с пустым массивом;
+        </li>
+        <li>
+            Цепочка вызова методов объекта;
+        </li>
+        <li>
+            Сущность <code>UserTable</code>;
+        </li>
+        <li>
+            Аннотации.
+        </li>
+    </ul>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZGExM2Z.png" alt="Mapping сущности с агрегированным полем">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NjQxMDh.png" alt="Mapping сущности с агрегированным полем - ошибка при объектной выборке">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Построение объектных выборок с агрегациями.</b></p>
+    <p>Ошибка говорит о том, что результат не может быть применен для объекта.</p>
+    <p><b>Решение:</b> либо не используем агрегацию, либо используем
+        <s>fetchObject</s> <code>fetch</code> (<s>fetchCollection</s> <code>fetchAll</code>).</p>
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Лимитированная выборка с <code>OneToMany</code> полем.</b></p>
+    <p>Корректен ли будет результат выборки в следующем запросе?</p>
+</section>
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MmU4NjQ.png" alt="Лимитированный запрос с OneToMany полем">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/YTQ4YjN.png" alt="Лимитированный запрос с OneToMany полем - результат">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Лимитированная выборка с <code>OneToMany</code> полем.</b></p>
+    <p>Происходит из-за того, что на уровне запроса, в результате получается плоский повторяющиеся список (декартово произведение множеств), по которому уже делается <b>limit</b>.</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/OTQ2OGV.png" alt="Лимитированный запрос с OneToMany полем - sql запрос до лимита">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZWUwZjR.png" alt="Лимитированный запрос с OneToMany полем - sql запрос после лимита">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Лимитированная выборка с <code>OneToMany</code> полем.</b></p>
+    <p><b>Решение:</b> либо делаем два отдельных запроса (первый с лимитом, второй со всеми данными от результата первого), либо используем
+        <code>fill</code> (правильный и красивый вариант).</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/YWFkNGI.png" alt="Лимитированный запрос с OneToMany полем - использование fill">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Если в <code>whereIn</code> передать пустой массив.</b></p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MjJmNWQ.png" alt="whereIn и пустой массив - результат">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Если в <code>whereIn</code> передать пустой массив.</b></p>
+    <p><b>Решение:</b> оборачиваем в условие весь запрос.</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/OTY1ODM.png" alt="whereIn и пустой массив - как сделать правильно">
+</section>
+
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Цепочка вызова методов объекта.</b></p>
+    <p>Какая есть опасность в следующей реализации?</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/M2QxYzg.png" alt="Цепочка вызова методов объекта">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Цепочка вызова методов объекта.</b></p>
+    <p>На одной из цепочки (кроме последней) может оказаться <code>null</code>.</p>
+    <p><b>Решение:</b> каждый этап цепочки нужно проверять на <code>null</code>, чтобы перейти на следующую цепочку.</p>
+    <em>Или переходим на php 8, и используем <b>null-safe оператор <code>?-></code></b> )</em>
+</section>
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/YzRlYTE.png" alt="Цепочка вызова методов объекта - решение">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Сущность <code>UserTable</code>.</b></p>
+    <p>Что будет если, попробовать внести изменение или создать пользователя?</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NWYwYTM.png" alt="UserTable - обновление данных - запрос">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/N2NlMGE.png" alt="UserTable - обновление данных - ошибка">
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Сущность <code>UserTable</code>.</b></p>
+    <p><code>UserTable</code> является сложной сущностью, создание и изменение данных - не простой процесс.</p>
+    <p><b>Решение:</b> используем <code>CUser</code> для операций не связанных с выборками.</p>
+</section>
+
+<section class="slide">
+    <h2>Общие проблемы с ORM</h2>
+    <p><b>Аннотации.</b></p>
+    <p>Аннотирование тяжелых по свойствам инфоблоков приводит к тому, что phpstorm либо долго индексирует аннотации, либо отказывается вообще их индексировать
+       (пример: Корунд, инфоблок товаров - примерно 700 полей)</p>
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <ul>
+         <li>
+            Создание элемента;
+        </li>
+        <li>
+            Свойство типа TEXT/HTML (<code>TextField</code>);
+        </li>
+        <li>
+            Использование <code>fill</code> для всех полей.
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Создание элемента.</b></p>
+    <p>
+        В версии инфоблока 2.0 нет возможности создать элемент с заполненными единичными свойствами.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZmFlNjZ.png" alt="Создание элемента - запрос">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZGQyODY.png" alt="Создание элемента - результат">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Создание элемента.</b></p>
+    <p><b>Решение:</b> либо используем старое API инфоблоков <code>CIblockElement</code>, либо переводим инфоблок в первую версию.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZmFlNjZ.png" alt="Создание элемента v1 - запрос">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MTVhZWI.png" alt="Создание элемента v1 - результат и еще одна проблема">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Создание элемента.</b></p>
+    <p><b>Решение:</b> используем <code>save</code> на стандартные данные инфоблока, затем, <code>save</code> на значение свойств.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MjcxNDZ.png" alt="Создание элемента v1 - запрос c двойным save">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ODAzN2Q.png" alt="Создание элемента v1 - запрос c двойным save - результат">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Создание элемента.</b></p>
+    <p>
+        Как правильно установить тип на <code>PREVIEW_TEXT</code> и <code>DETAIL_TEXT</code> ?
+    </p>
+    <p><b>Решение:</b> устанавливаем значение в первом <code>save</code>, затем, тип во втором <code>save</code>.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NzcyZWM.png" alt="Создание элемента v1 - запрос c двойным save - textType">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b> Свойство типа TEXT/HTML (<code>TextField</code>).</b></p>
+    <p>Что нужно знать:</p>
+    <ul>
+        <li>Как неправильно происходит сохранение данных;</li>
+        <li>Как правильно сохранить данные и установить тип (<b>HTML</b> или <b>TEXT</b>);</li>
+        <li>Особенности выборки значения.</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b> Свойство типа TEXT/HTML (<code>TextField</code>).</b></p>
+    <p>Неправильное сохранение данных.</p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZGUzZDY.png" alt="TextField - неправильное сохранение данных">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b> Свойство типа TEXT/HTML (<code>TextField</code>).</b></p>
+    <p>Неправильное сохранение данных.</p>
+    <p><b>Проблема будет следующая:</b> мы не указали тип данных <b>HTML</b> или <b>TEXT</b>.</p>
+
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/NTY1MjE.png" alt="TextField - неправильное сохранение данных - не указан тип">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b> Свойство типа TEXT/HTML (<code>TextField</code>).</b></p>
+    <p>Как правильно сохранить данные и установить тип (<b>HTML</b> или <b>TEXT</b>).</p>
+    <p><b>Решение:</b> Нужно перед установкой сериализовать данные функцией <code>serialize</code>.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/YjM3YjI.png" alt="TextField - правильное сохранение данных">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b> Свойство типа TEXT/HTML (<code>TextField</code>).</b></p>
+    <p>Особенности выборки значения.</p>
+    <p><b>Решение:</b> т.к. значение данного поля является составное, то его значение хранится в сериализованном виде. При выборке, результат значения поля нужно десериализовать
+                       функцией <code>unserialize</code>.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MDE0MmE.png" alt="TextField - результат выборки">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/YTlkMDU.png" alt="TextField - выборка">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MDZhZjh.png" alt="TextField - результат десериализации">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Использование <code>fill</code> для всех полей.</b></p>
+    <p>
+        Ошибка появляется если, вы работаете с инфоблоком 2.0.
+    </p>
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/ZDY4YzJ.png" alt="fill - для всех полей - запрос">
+</section>
+
+<section class="slide clear black">
+    <img class="cover" src="https://w6p.ru/MTkyYWU.png" alt="fill - для всех полей - запрос - ошибка">
+</section>
+
+<section class="slide">
+    <h2>Проблемы присущие ORM для инфоблоков</h2>
+    <p><b>Использование <code>fill</code> для всех полей.</b></p>
+    <p>
+        Ошибка появляется если, вы работаете с инфоблоком 2.0.
+    </p>
+    <p><b>Решение:</b> либо перевести на первую версию инфоблок, либо перечислить все поля, где для каждого нужно будет дописать <code>.VALUE</code>.
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Проблемы и особенности использования</h2>
+    <p>
+        На самом деле, все проблемы и особенности еще не все раскрыты, т.к. еще не все известны.
+    </p>
+    По багам вопросам можно посмотреть здесь:
+    <a href="https://github.com/medveddev/bxorm/issues">https://github.com/medveddev/bxorm/issues</a>
+</section>
+
+<section class="slide">
+    <h2>Пожелания</h2>
+    <ul>
+        <li class="next">
+            Починить сохранение данных для 2.0 для инфоблоков, т.к работа по первой версий структуры - это шаг назад;
+        </li>
+        <li class="next">
+            Перевести поле <code>TextField</code> из массива с сериализациями на объекты;
+        </li>
+        <li class="next">
+            Добавить метод <code>whereInEmpty</code> имеющий автоматическую проверку на пустой массив;
+        </li>
+        <li class="next">
+            Для объектов сделать <b>null-объекты</b>
+            (Паттерн <b>Null object</b>)
+            для цепочки вызовов методов объекта, либо переходить на <b>php 8</b> с использованием <b>null-safe оператор</b>а;
+        </li>
+        <li class="next">
+            Генерация аннотаций для каждой сущности в отдельном файле.
+        </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Послесловие</h2>
+
+    <p>
+        Некоторое время назад ORM была без объектов, без данамической компиляции и многого другого. С тех пор остались описанные сущности, вызовы уже устаревших методов, описание полей массивами и т.д. и т.п.
+    </p>
+
+    <p>
+        По возможности следите за кодом с которым приходится работать. Если в нем есть куски старой ORM &mdash; исправляйте хотя бы небольшими частями
+    </p>
+</section>
+
+<section class="slide clear black">
+    <h3 style="color:white">
+        Уходить от этого:
+    </h3>
+    <img class="cover" src="https://w6p.ru/YmVjMTB.png" alt="orm раньше">
+</section>
+
+<section class="slide clear black">
+    <h3 style="color:white">
+        И от этого:
+    </h3>
+    <img class="cover" src="https://w6p.ru/NDQ3MTN.png" alt="orm раньше запрос">
+</section>
+
+<section class="slide clear black">
+    <h3 style="color:white">
+        Писать или переписать на это:
+    </h3>
+    <img class="cover" src="https://w6p.ru/ZmE2NDZ.png" alt="orm правильно">
+</section>
+
+<section class="slide">
+    <h2 class="shout grow">Спасибо</h2>
+</section>
+
+<section class="slide">
+    <h2 class="shout grow">Вопросы?</h2>
+</section>
+
+<footer class="badge">
+    <a href="https://github.com/shower/shower">Fork me on GitHub</a>
+</footer>
+
+<div class="progress"></div>
+
+<script src="shower/shower.js"></script>
+<!-- Copyright © 2021 Yours Truly, Famous Inc. -->
+
+</body>
+</html>
